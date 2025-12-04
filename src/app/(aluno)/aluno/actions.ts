@@ -1,0 +1,184 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "@/auth";
+import { registrarLog } from "@/lib/log";
+import { prisma } from "@/lib/prisma";
+import { TipoUsuario } from "@/types/tipo-usuario";
+
+export type FeedbackActionState = {
+  status: "idle" | "success" | "error";
+  message: string | null;
+};
+
+const SESSION_ERROR: FeedbackActionState = {
+  status: "error",
+  message: "Sessão expirada. Faça login novamente."
+};
+
+function parseOptionalText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+export async function createFeedback(
+  _state: FeedbackActionState,
+  formData: FormData
+): Promise<FeedbackActionState> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return SESSION_ERROR;
+    }
+
+    if (session.user.tipo !== TipoUsuario.Aluno) {
+      return { status: "error", message: "Acesso não autorizado." };
+    }
+
+    const alunoId = Number(session.user.id);
+    const treinoId = Number(formData.get("treinoId"));
+    const nota = Number(formData.get("nota"));
+    const rpe = parseOptionalText(formData.get("rpe"));
+  const observacoes = parseOptionalText(formData.get("observacoes"));
+  const treinoRealizado = formData.get("treinoRealizado") === "1";
+  const tempoTreino = parseOptionalText(formData.get("tempoTreino"));
+
+    if (!Number.isInteger(treinoId) || treinoId <= 0) {
+      return { status: "error", message: "Treino inválido." };
+    }
+
+    if (!Number.isInteger(nota) || nota < 1 || nota > 10) {
+      return { status: "error", message: "Informe uma nota entre 1 e 10." };
+    }
+
+    const treino = await prisma.treino.findFirst({
+      where: {
+        id: treinoId,
+        alunoId,
+        ehModelo: false
+      }
+    });
+
+    if (!treino) {
+      return { status: "error", message: "Treino não encontrado." };
+    }
+
+    const existente = await prisma.feedback.findUnique({
+      where: {
+        alunoId_treinoId: {
+          alunoId,
+          treinoId
+        }
+      }
+    });
+
+    if (existente) {
+      return { status: "error", message: "Feedback do dia já enviado." };
+    }
+
+    if (!treinoRealizado) {
+      return { status: "error", message: "Só é possível enviar feedback quando o treino for marcado como realizado." };
+    }
+
+    // If tempoTreino was provided, prepend it to observacoes so it's stored.
+    const observacoesFinal = tempoTreino
+      ? `Tempo do treino: ${tempoTreino}\n${observacoes ?? ""}`
+      : observacoes;
+
+    await prisma.feedback.create({
+      data: {
+        alunoId,
+        treinoId,
+        nota,
+        rpe,
+        observacoes: observacoesFinal,
+        enviadoEm: new Date()
+      }
+    });
+
+    await registrarLog(alunoId, "FEEDBACK", "create");
+    await revalidatePath("/aluno");
+
+    return { status: "success", message: "Feedback enviado com sucesso." };
+  } catch (error) {
+    console.error("Erro ao criar feedback", error);
+    return { status: "error", message: "Não foi possível enviar o feedback." };
+  }
+}
+
+export async function updateFeedback(
+  _state: FeedbackActionState,
+  formData: FormData
+): Promise<FeedbackActionState> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return SESSION_ERROR;
+    }
+
+    if (session.user.tipo !== TipoUsuario.Aluno) {
+      return { status: "error", message: "Acesso não autorizado." };
+    }
+
+    const alunoId = Number(session.user.id);
+    const feedbackId = Number(formData.get("feedbackId"));
+    const treinoId = Number(formData.get("treinoId"));
+    const nota = Number(formData.get("nota"));
+  const rpe = parseOptionalText(formData.get("rpe"));
+  const observacoes = parseOptionalText(formData.get("observacoes"));
+  const treinoRealizado = formData.get("treinoRealizado") === "1";
+  const tempoTreino = parseOptionalText(formData.get("tempoTreino"));
+
+    if (!Number.isInteger(feedbackId) || feedbackId <= 0) {
+      return { status: "error", message: "Feedback inválido." };
+    }
+
+    if (!Number.isInteger(treinoId) || treinoId <= 0) {
+      return { status: "error", message: "Treino inválido." };
+    }
+
+    if (!Number.isInteger(nota) || nota < 1 || nota > 10) {
+      return { status: "error", message: "Informe uma nota entre 1 e 10." };
+    }
+
+    const existente = await prisma.feedback.findUnique({
+      where: { id: feedbackId }
+    });
+
+    if (!existente || existente.alunoId !== alunoId || existente.treinoId !== treinoId) {
+      return { status: "error", message: "Feedback não encontrado." };
+    }
+
+    if (!treinoRealizado) {
+      return { status: "error", message: "Só é possível enviar feedback quando o treino for marcado como realizado." };
+    }
+
+    const observacoesFinal = tempoTreino
+      ? `Tempo do treino: ${tempoTreino}\n${observacoes ?? ""}`
+      : observacoes;
+
+    await prisma.feedback.update({
+      where: { id: feedbackId },
+      data: {
+        nota,
+        rpe,
+        observacoes: observacoesFinal,
+        enviadoEm: new Date()
+      }
+    });
+
+    await registrarLog(alunoId, "FEEDBACK", "update");
+    await revalidatePath("/aluno");
+
+    return { status: "success", message: "Feedback atualizado." };
+  } catch (error) {
+    console.error("Erro ao atualizar feedback", error);
+    return { status: "error", message: "Não foi possível atualizar o feedback." };
+  }
+}
