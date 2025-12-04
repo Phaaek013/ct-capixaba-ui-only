@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { Button, Input, Label, Checkbox, Alert } from "@/components/ui";
 
 import type { FeedbackActionState } from "./actions";
 
@@ -28,13 +29,9 @@ function SubmitButton({ children }: { children: ReactNode }) {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-    >
-      {pending ? "Enviando..." : children}
-    </button>
+    <Button type="submit" isLoading={pending}>
+      {children}
+    </Button>
   );
 }
 
@@ -49,7 +46,6 @@ export default function FeedbackSection({ treinoId, feedback, createAction, upda
     setEditing(!feedback);
   }, [feedback?.id]);
 
-  // Watch for success on either create or update and then update local UI
   useEffect(() => {
     const success = createState.status === "success" || updateState.status === "success";
     if (!success) return;
@@ -70,18 +66,14 @@ export default function FeedbackSection({ treinoId, feedback, createAction, upda
       observacoes: observacoesFinal
     });
 
-    // hide editor
     setEditing(false);
-    // clear stored submission
     submittedRef.current = null;
   }, [createState.status, updateState.status]);
 
   const formState = feedback && editing ? updateState : createState;
 
-  // parse stored observacoes to prefill tempo and restante
   function parseObservacoes(raw: string | null | undefined) {
     if (!raw) return { tempo: "", restante: "" };
-    // Use [\s\S]* instead of /s flag for broader compatibility
     const m = raw.match(/^Tempo do treino:\s*([^\r\n]+)\r?\n?([\s\S]*)$/);
     if (m) {
       return { tempo: m[1].trim(), restante: (m[2] || "").trim() };
@@ -104,20 +96,18 @@ export default function FeedbackSection({ treinoId, feedback, createAction, upda
     const parsed = parseObservacoes(feedback?.observacoes ?? "");
 
     return (
-      <form action={action} onSubmit={handleSubmit} className="mt-3 space-y-3">
+      <form action={action} onSubmit={handleSubmit} className="space-y-4">
         <input type="hidden" name="treinoId" value={treinoId} />
         {feedback ? <input type="hidden" name="feedbackId" value={feedback.id ?? ""} /> : null}
 
-        <div className="space-y-1">
-          <label htmlFor="nota" className="text-sm font-medium">
-            Nota (1 a 10)
-          </label>
+        <div>
+          <Label htmlFor="nota">Nota (1 a 10)</Label>
           <select
             id="nota"
             name="nota"
             defaultValue={feedback ? String(feedback.nota) : ""}
             required
-            className="w-full rounded border border-slate-300 p-2 text-sm"
+            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="" disabled>
               Selecione
@@ -133,96 +123,94 @@ export default function FeedbackSection({ treinoId, feedback, createAction, upda
           </select>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="rpe" className="text-sm font-medium">
-            RPE (opcional)
-          </label>
-          <input
+        <div>
+          <Label htmlFor="rpe">RPE (opcional)</Label>
+          <Input
             id="rpe"
             name="rpe"
             defaultValue={feedback?.rpe ?? ""}
-            className="w-full rounded border border-slate-300 p-2 text-sm"
             placeholder="Percepção de esforço"
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="treinoRealizado"
-              value="1"
-              className="h-4 w-4"
-              defaultChecked={Boolean(feedback)}
-            />
-            <span>Marcar treino como realizado</span>
-          </label>
-          <label className="text-sm flex items-center gap-2">
-            <span className="text-xs text-slate-600">Tempo (min)</span>
-            <input
-              type="text"
+        <div className="flex items-center gap-4">
+          <Checkbox
+            id="treinoRealizado"
+            name="treinoRealizado"
+            value="1"
+            defaultChecked={Boolean(feedback)}
+            label="Marcar treino como realizado"
+          />
+          <div className="flex items-center gap-2">
+            <Label htmlFor="tempoTreino" className="text-xs text-zinc-400 mb-0">Tempo (min)</Label>
+            <Input
+              id="tempoTreino"
               name="tempoTreino"
               defaultValue={parsed.tempo ?? ""}
               placeholder="ex: 45"
-              className="w-20 rounded border border-slate-300 p-1 text-sm"
+              className="w-20"
             />
-          </label>
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="observacoes" className="text-sm font-medium">
-            Observações
-          </label>
+        <div>
+          <Label htmlFor="observacoes">Observações</Label>
           <textarea
             id="observacoes"
             name="observacoes"
             rows={4}
             defaultValue={parsed.restante ?? ""}
-            className="w-full rounded border border-slate-300 p-2 text-sm"
+            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             placeholder="Compartilhe como se sentiu no treino"
           />
         </div>
 
-        {formState.message ? (
-          <p className={`text-sm ${formState.status === "error" ? "text-red-600" : "text-green-600"}`}>
+        {formState.message && (
+          <Alert variant={formState.status === "error" ? "error" : "success"}>
             {formState.message}
-          </p>
-        ) : null}
+          </Alert>
+        )}
 
         <div className="flex items-center gap-3">
           <SubmitButton>{feedback ? "Atualizar feedback" : "Enviar feedback"}</SubmitButton>
-          {feedback ? (
-            <button type="button" className="text-sm text-slate-600 underline" onClick={() => setEditing(false)}>
+          {feedback && (
+            <Button type="button" variant="ghost" onClick={() => setEditing(false)}>
               Cancelar
-            </button>
-          ) : null}
+            </Button>
+          )}
         </div>
       </form>
     );
   }
 
-  // When not editing, show either the locally-updated feedback (optimistic)
-  // or the feedback passed from the server.
   const shown = localFeedback ?? feedback;
 
   return (
-    <div className="mt-3 space-y-2 text-sm">
-      <p>
-        <span className="font-medium">Nota:</span> {shown?.nota}
-      </p>
-      {shown?.rpe ? (
-        <p>
-          <span className="font-medium">RPE:</span> {shown.rpe}
+    <div className="space-y-3 text-sm">
+      <div className="space-y-2">
+        <p className="text-zinc-300">
+          <span className="font-medium text-zinc-100">Nota:</span> {shown?.nota}
         </p>
-      ) : null}
-      {shown?.observacoes ? (
-        <p className="whitespace-pre-wrap">
-          <span className="font-medium">Observações:</span> {shown.observacoes}
-        </p>
-      ) : null}
-      <button type="button" className="text-sm text-blue-600 underline" onClick={() => setEditing(true)}>
+        {shown?.rpe && (
+          <p className="text-zinc-300">
+            <span className="font-medium text-zinc-100">RPE:</span> {shown.rpe}
+          </p>
+        )}
+        {shown?.observacoes && (
+          <p className="whitespace-pre-wrap text-zinc-300">
+            <span className="font-medium text-zinc-100">Observações:</span> {shown.observacoes}
+          </p>
+        )}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setEditing(true)}
+        className="text-orange-600 hover:text-orange-500"
+      >
         Editar feedback
-      </button>
+      </Button>
     </div>
   );
 }

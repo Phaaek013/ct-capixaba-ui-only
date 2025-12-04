@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { Button, Input, Label, PasswordInput, Checkbox, Alert } from "@/components/ui";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -14,7 +15,6 @@ export default function LoginForm() {
   useEffect(() => {
     const err = searchParams.get("error");
     if (err) {
-      // Map common NextAuth error codes to user-friendly messages
       const map: Record<string, string> = {
         CredentialsSignin: "Credenciais inválidas",
         AccessDenied: "Acesso negado",
@@ -49,25 +49,52 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md space-y-4">
+    <form onSubmit={onSubmit} className="space-y-5">
+      {erro && (
+        <Alert variant="error">
+          {erro}
+        </Alert>
+      )}
+
       <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" required autoComplete="email" />
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="seu@email.com"
+        />
       </div>
+
       <div>
-        <label htmlFor="senha">Senha</label>
-        <input id="senha" name="senha" type="password" required autoComplete="current-password" />
+        <Label htmlFor="senha">Senha</Label>
+        <PasswordInput
+          id="senha"
+          name="senha"
+          required
+          autoComplete="current-password"
+          placeholder="••••••••"
+        />
       </div>
-      <div className="flex items-center space-x-2">
-        <input id="manter" name="manter" type="checkbox" defaultChecked className="w-4 h-4" />
-        <label htmlFor="manter" className="!mb-0 text-sm text-slate-700">
-          Manter conectado por 30 dias
-        </label>
+
+      <div>
+        <Checkbox
+          id="manter"
+          name="manter"
+          defaultChecked
+          label="Manter conectado por 30 dias"
+        />
       </div>
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
-      <button type="submit" disabled={carregando}>
-        {carregando ? "Entrando..." : "Entrar"}
-      </button>
+
+      <Button
+        type="submit"
+        isLoading={carregando}
+        className="w-full"
+      >
+        Entrar
+      </Button>
     </form>
   );
 }

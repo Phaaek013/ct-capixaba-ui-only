@@ -10,6 +10,7 @@ import AlunoTreinoCache from './AlunoTreinoCache';
 import { prisma } from '@/lib/prisma';
 import { TIMEZONE, getTodayRangeInTZ } from '@/lib/tz';
 import { TipoUsuario } from '@/types/tipo-usuario';
+import { Card, CardHeader, CardTitle, CardContent, PageHeader } from '@/components/ui';
 
 const YouTubeEmbed = dynamic(() => import('@/components/YouTubeEmbed'), { ssr: false });
 
@@ -77,18 +78,20 @@ export default async function AlunoPage() {
 
     return (
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold">Meu Treino</h1>
-          <p className="text-sm text-slate-500">{session.user.email}</p>
-        </header>
+        <PageHeader
+          title="Meu Treino"
+          description={session.user.email ?? ''}
+        />
 
-        <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold">Treino de hoje</h2>
-          <div className="mt-3 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Treino de hoje</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {treino ? (
               <>
                 <textarea
-                  className="h-48 w-full resize-none rounded border border-slate-300 p-2 text-sm"
+                  className="h-48 w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 p-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   readOnly
                   value={treino.conteudo}
                 />
@@ -104,100 +107,112 @@ export default async function AlunoPage() {
               </>
             ) : (
               <>
-                <p className="text-sm text-slate-600">Sem treino para hoje.</p>
+                <p className="text-sm text-zinc-400">Sem treino para hoje.</p>
                 <AlunoTreinoCache alunoId={alunoId} />
               </>
             )}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold">Feedback</h2>
-          {treino ? (
-            <FeedbackSection
-              treinoId={treino.id}
-              feedback={feedback}
-              createAction={createFeedback}
-              updateAction={updateFeedback}
-            />
-          ) : (
-            <p className="mt-3 text-sm text-slate-500">
-              Envie seu feedback quando um treino estiver disponível.
-            </p>
-          )}
-        </section>
-
-        <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold">Meus PDFs</h2>
-          {pdfs.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Nenhum documento disponível.</p>
-          ) : (
-            <ul className="mt-3 space-y-3">
-              {pdfs.map((pdf) => (
-                <li key={pdf.id} className="space-y-1">
-                  <p className="text-sm font-medium">{pdf.titulo}</p>
-                  <p className="text-xs text-slate-500">
-                    {new Date(pdf.dataEnvio).toLocaleString('pt-BR', {
-                      timeZone: TIMEZONE
-                    })}
-                  </p>
-                  <Link
-                    href={pdf.filePath}
-                    target="_blank"
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    Abrir documento
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold">Últimos treinos</h2>
-          <div className="mt-3 space-y-3">
-            {historico && historico.length > 0 ? (
-              historico
-                .filter((h) => !treino || h.id !== treino.id)
-                .map((h) => (
-                  <article key={h.id} className="rounded border border-slate-200 bg-white p-3">
-                    <p className="text-sm font-medium">
-                      {h.aluno?.nome ?? session.user.name ?? session.user.email}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {h.dataTreino
-                        ? new Date(h.dataTreino).toLocaleDateString('pt-BR', { timeZone: TIMEZONE })
-                        : ''}
-                    </p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm">{h.conteudo}</p>
-                    {h.videoUrl && (
-                      <a
-                        href={h.videoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-block mt-2 text-sm text-blue-600 hover:underline"
-                      >
-                        Ver vídeo
-                      </a>
-                    )}
-                  </article>
-                ))
+        <Card>
+          <CardHeader>
+            <CardTitle>Feedback</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {treino ? (
+              <FeedbackSection
+                treinoId={treino.id}
+                feedback={feedback}
+                createAction={createFeedback}
+                updateAction={updateFeedback}
+              />
             ) : (
-              <p className="text-sm text-slate-600">Nenhum treino anterior encontrado.</p>
+              <p className="text-sm text-zinc-400">
+                Envie seu feedback quando um treino estiver disponível.
+              </p>
             )}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Meus PDFs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pdfs.length === 0 ? (
+              <p className="text-sm text-zinc-400">Nenhum documento disponível.</p>
+            ) : (
+              <ul className="space-y-4">
+                {pdfs.map((pdf) => (
+                  <li key={pdf.id} className="space-y-2 pb-4 border-b border-zinc-800 last:border-0 last:pb-0">
+                    <p className="text-sm font-medium text-zinc-100">{pdf.titulo}</p>
+                    <p className="text-xs text-zinc-500">
+                      {new Date(pdf.dataEnvio).toLocaleString('pt-BR', {
+                        timeZone: TIMEZONE
+                      })}
+                    </p>
+                    <Link
+                      href={pdf.filePath}
+                      target="_blank"
+                      className="inline-block text-sm text-orange-600 hover:text-orange-500 transition-colors"
+                    >
+                      Abrir documento →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Últimos treinos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {historico && historico.length > 0 ? (
+                historico
+                  .filter((h) => !treino || h.id !== treino.id)
+                  .map((h) => (
+                    <article key={h.id} className="rounded-md border border-zinc-800 bg-zinc-900/30 p-4 space-y-2">
+                      <p className="text-sm font-medium text-zinc-100">
+                        {h.aluno?.nome ?? session.user.name ?? session.user.email}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {h.dataTreino
+                          ? new Date(h.dataTreino).toLocaleDateString('pt-BR', { timeZone: TIMEZONE })
+                          : ''}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-300">{h.conteudo}</p>
+                      {h.videoUrl && (
+                        <a
+                          href={h.videoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-block mt-2 text-sm text-orange-600 hover:text-orange-500 transition-colors"
+                        >
+                          Ver vídeo →
+                        </a>
+                      )}
+                    </article>
+                  ))
+              ) : (
+                <p className="text-sm text-zinc-400">Nenhum treino anterior encontrado.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   } catch (error) {
     console.error('Erro ao carregar página do aluno:', error);
     return (
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold">Erro</h1>
-          <p className="text-sm text-slate-500">Ocorreu um erro ao carregar seus dados.</p>
-        </header>
+        <PageHeader
+          title="Erro"
+          description="Ocorreu um erro ao carregar seus dados."
+        />
       </div>
     );
   }

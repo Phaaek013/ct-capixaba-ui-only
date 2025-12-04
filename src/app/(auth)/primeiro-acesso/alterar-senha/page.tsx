@@ -6,6 +6,7 @@ import { compararSenha, hashSenha } from "@/utils/crypto";
 import { registrarLog } from "@/lib/log";
 import { revalidatePath } from "next/cache";
 import { TipoUsuario } from "@/types/tipo-usuario";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Alert, Label, PasswordInput, Button } from "@/components/ui";
 
 async function alterarSenha(formData: FormData) {
   "use server";
@@ -61,30 +62,68 @@ export default async function AlterarSenhaPrimeiroAcesso({ searchParams }: PageP
   const mensagemErro = typeof searchParams?.error === "string" ? searchParams?.error : null;
 
   return (
-    <div className="max-w-md space-y-6">
-      <h1 className="text-2xl font-bold">Alterar senha</h1>
-      <p className="text-sm text-slate-600">
-        Defina uma nova senha para continuar usando o sistema.
-      </p>
-      {mensagemErro === "invalid" && (
-        <p className="text-sm text-red-600">As senhas precisam corresponder e ter pelo menos 8 caracteres.</p>
-      )}
-      {mensagemErro === "senha" && <p className="text-sm text-red-600">Senha atual incorreta.</p>}
-      <form action={alterarSenha} className="space-y-4">
-        <div>
-          <label htmlFor="senhaAtual">Senha atual</label>
-          <input id="senhaAtual" name="senhaAtual" type="password" required />
-        </div>
-        <div>
-          <label htmlFor="novaSenha">Nova senha</label>
-          <input id="novaSenha" name="novaSenha" type="password" minLength={8} required />
-        </div>
-        <div>
-          <label htmlFor="confirmar">Confirmar nova senha</label>
-          <input id="confirmar" name="confirmar" type="password" minLength={8} required />
-        </div>
-        <button type="submit">Salvar nova senha</button>
-      </form>
+    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-4 text-center">
+          <div className="text-3xl font-bold text-orange-600">
+            CT Capixaba
+          </div>
+          <div className="space-y-1">
+            <CardTitle>Alterar senha</CardTitle>
+            <CardDescription>Defina uma nova senha para continuar usando o sistema</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {mensagemErro === "invalid" && (
+            <Alert variant="error" className="mb-5">
+              As senhas precisam corresponder e ter pelo menos 8 caracteres.
+            </Alert>
+          )}
+          {mensagemErro === "senha" && (
+            <Alert variant="error" className="mb-5">
+              Senha atual incorreta.
+            </Alert>
+          )}
+
+          <form action={alterarSenha} className="space-y-5">
+            <div>
+              <Label htmlFor="senhaAtual">Senha atual</Label>
+              <PasswordInput
+                id="senhaAtual"
+                name="senhaAtual"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="novaSenha">Nova senha</Label>
+              <PasswordInput
+                id="novaSenha"
+                name="novaSenha"
+                required
+                minLength={8}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="confirmar">Confirmar nova senha</Label>
+              <PasswordInput
+                id="confirmar"
+                name="confirmar"
+                required
+                minLength={8}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
+              Salvar nova senha
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

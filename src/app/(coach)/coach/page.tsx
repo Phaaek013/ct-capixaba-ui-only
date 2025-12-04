@@ -1,24 +1,46 @@
 import Link from "next/link";
 import { assertCoach } from "@/lib/roles";
-import "./page.css";
+import { PageHeader, Card, CardContent } from "@/components/ui";
 
 export default async function CoachDashboard() {
   const session = await assertCoach();
 
+  const navItems = [
+    { href: "/coach/alunos", label: "Gerenciar alunos", description: "Adicione e gerencie seus alunos" },
+    { href: "/coach/treinos", label: "Treinos", description: "Crie e envie treinos para seus alunos" },
+    { href: "/coach/feedback", label: "Feedbacks", description: "Veja os feedbacks dos alunos" },
+    { href: "/coach/modelos", label: "Modelos de treino", description: "Crie modelos reutilizáveis" },
+    { href: "/coach/pdfs", label: "PDFs", description: "Compartilhe documentos com seus alunos" },
+    { href: "/coach/config", label: "Configurações", description: "Configure sua conta" },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="card p-4 space-y-2">
-        <h1 className="text-2xl font-bold">Olá, {session.user?.name}</h1>
-        <p className="text-sm muted">{session.user?.email}</p>
+    <div className="space-y-8">
+      <PageHeader
+        title={`Olá, ${session.user?.name}`}
+        description={session.user?.email ?? ''}
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="group"
+          >
+            <Card className="h-full transition-all duration-200 hover:border-orange-600 hover:shadow-lg hover:shadow-orange-600/10">
+              <CardContent className="p-6 space-y-2">
+                <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-orange-600 transition-colors">
+                  {item.label}
+                </h3>
+                <p className="text-sm text-zinc-400">
+                  {item.description}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
-      <nav className="grid gap-2 coach-nav">
-        <Link href="/coach/alunos" className="card p-4 hover:border-primary transition-colors">Gerenciar alunos</Link>
-        <Link href="/coach/treinos" className="card p-4 hover:border-primary transition-colors">Treinos</Link>
-        <Link href="/coach/feedback" className="card p-4 hover:border-primary transition-colors">Feedbacks</Link>
-        <Link href="/coach/modelos" className="card p-4 hover:border-primary transition-colors">Modelos de treino</Link>
-        <Link href="/coach/pdfs" className="card p-4 hover:border-primary transition-colors">PDFs</Link>
-        <Link href="/coach/config" className="card p-4 hover:border-primary transition-colors">Configurações</Link>
-      </nav>
     </div>
   );
 }

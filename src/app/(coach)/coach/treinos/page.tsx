@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { criarTreino } from "./actions";
 import Link from "next/link";
 import { assertCoach } from "@/lib/roles";
+import { PageHeader, Card, CardHeader, CardTitle, CardContent, Label, Input, Button, Alert } from "@/components/ui";
 
 interface PageProps {
   searchParams?: Record<string, string | string[]>;
@@ -33,92 +34,117 @@ export default async function TreinosPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Treinos</h1>
-        {mensagemErro === "invalid" && (
-          <p className="text-sm text-red-600">Informe aluno, data e conteúdo.</p>
-        )}
-        {mensagemErro === "duplicado" && (
-          <p className="text-sm text-red-600">Já existe um treino para este aluno nesta data.</p>
-        )}
-        {mensagemSucesso && <p className="text-sm text-green-600">Treino salvo com sucesso.</p>}
-      </div>
+      <PageHeader title="Treinos" />
 
-      <section className="bg-white shadow rounded p-4 space-y-4">
-        <h2 className="text-xl font-semibold">Cadastrar treino</h2>
-        {origemTreino && (
-          <p className="text-sm text-slate-600">
-            Duplicando treino #{origemTreino.id} de {origemTreino.aluno?.nome ?? "Modelo"}.
-          </p>
-        )}
-        <form action={criarTreino} className="space-y-3">
-          <input type="hidden" name="origemTreinoId" value={origemTreino?.id ?? ""} />
-          <div>
-            <label htmlFor="alunoId">Aluno</label>
-            <select id="alunoId" name="alunoId" defaultValue="" required>
-              <option value="" disabled>
-                Selecione um aluno
-              </option>
-              {alunos.map((aluno) => (
-                <option key={aluno.id} value={aluno.id}>
-                  {aluno.nome}
+      {mensagemErro === "invalid" && (
+        <Alert variant="error">Informe aluno, data e conteúdo.</Alert>
+      )}
+      {mensagemErro === "duplicado" && (
+        <Alert variant="error">Já existe um treino para este aluno nesta data.</Alert>
+      )}
+      {mensagemSucesso && (
+        <Alert variant="success">Treino salvo com sucesso.</Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cadastrar treino</CardTitle>
+          {origemTreino && (
+            <p className="text-sm text-zinc-400 mt-2">
+              Duplicando treino #{origemTreino.id} de {origemTreino.aluno?.nome ?? "Modelo"}.
+            </p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <form action={criarTreino} className="space-y-4">
+            <input type="hidden" name="origemTreinoId" value={origemTreino?.id ?? ""} />
+
+            <div>
+              <Label htmlFor="alunoId">Aluno</Label>
+              <select
+                id="alunoId"
+                name="alunoId"
+                defaultValue=""
+                required
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="" disabled>
+                  Selecione um aluno
                 </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="dataTreino">Data do treino</label>
-            <input id="dataTreino" name="dataTreino" type="date" required />
-          </div>
-          <div>
-            <label htmlFor="conteudo">Conteúdo</label>
-            <textarea
-              id="conteudo"
-              name="conteudo"
-              rows={6}
-              required
-              defaultValue={origemTreino?.conteudo ?? ""}
-            />
-          </div>
-          <div>
-            <label htmlFor="videoUrl">URL do vídeo (opcional)</label>
-            <input id="videoUrl" name="videoUrl" defaultValue={origemTreino?.videoUrl ?? ""} />
-          </div>
-          <button type="submit">Salvar treino</button>
-        </form>
-      </section>
+                {alunos.map((aluno) => (
+                  <option key={aluno.id} value={aluno.id}>
+                    {aluno.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Últimos treinos</h2>
-        {treinos.length === 0 ? (
-          <p>Nenhum treino cadastrado ainda.</p>
-        ) : (
-          <ul className="space-y-4">
-            {treinos.map((treino) => (
-              <li key={treino.id} className="bg-white shadow rounded p-4 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{treino.aluno?.nome ?? "Aluno removido"}</p>
-                    <p className="text-sm text-slate-600">{formatarData(treino.dataTreino ?? new Date())}</p>
+            <div>
+              <Label htmlFor="dataTreino">Data do treino</Label>
+              <Input id="dataTreino" name="dataTreino" type="date" required />
+            </div>
+
+            <div>
+              <Label htmlFor="conteudo">Conteúdo</Label>
+              <textarea
+                id="conteudo"
+                name="conteudo"
+                rows={6}
+                required
+                defaultValue={origemTreino?.conteudo ?? ""}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="videoUrl">URL do vídeo (opcional)</Label>
+              <Input id="videoUrl" name="videoUrl" defaultValue={origemTreino?.videoUrl ?? ""} />
+            </div>
+
+            <Button type="submit">Salvar treino</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Últimos treinos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {treinos.length === 0 ? (
+            <p className="text-sm text-zinc-400">Nenhum treino cadastrado ainda.</p>
+          ) : (
+            <ul className="space-y-4">
+              {treinos.map((treino) => (
+                <li key={treino.id} className="rounded-md border border-zinc-800 bg-zinc-900/30 p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-zinc-100">{treino.aluno?.nome ?? "Aluno removido"}</p>
+                      <p className="text-sm text-zinc-500">{formatarData(treino.dataTreino ?? new Date())}</p>
+                    </div>
+                    <Link href={`/coach/treinos?origem=${treino.id}`}>
+                      <Button variant="secondary" size="sm">
+                        Duplicar
+                      </Button>
+                    </Link>
                   </div>
-                  <Link
-                    href={`/coach/treinos?origem=${treino.id}`}
-                    className="bg-slate-200 text-slate-800 px-3 py-2 rounded hover:bg-slate-300"
-                  >
-                    Duplicar
-                  </Link>
-                </div>
-                <p className="text-sm whitespace-pre-wrap text-slate-700">{treino.conteudo}</p>
-                {treino.videoUrl && (
-                  <a href={treino.videoUrl} target="_blank" rel="noreferrer" className="text-blue-600">
-                    Ver vídeo
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <p className="text-sm whitespace-pre-wrap text-zinc-300">{treino.conteudo}</p>
+                  {treino.videoUrl && (
+                    <a
+                      href={treino.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block text-sm text-orange-600 hover:text-orange-500 transition-colors"
+                    >
+                      Ver vídeo →
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
