@@ -1,53 +1,60 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/auth";
-import { redirect } from "next/navigation";
+// src/app/(public)/login/page.tsx
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import LoginForm from "./login-form";
 import { TipoUsuario } from "@/types/tipo-usuario";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui";
+import LoginForm from "./login-form";
+
+// Garante que o Next não tente pré-renderizar isso estaticamente
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
-  if (session) {
-    if (session.user.senhaPrecisaTroca) {
-      redirect("/primeiro-acesso/alterar-senha");
-    }
-    if (session.user.tipo === TipoUsuario.Coach) {
-      redirect("/coach");
-    }
-    redirect("/aluno");
-  }
-
-  const totalCoaches = await prisma.usuario.count({ where: { tipo: TipoUsuario.Coach } });
+  // Só usamos o banco pra saber se precisa mostrar o link de setup do primeiro coach
+  const totalCoaches = await prisma.usuario.count({
+    where: { tipo: TipoUsuario.Coach },
+  });
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
-          <div className="text-3xl font-bold text-orange-600">
-            CT Capixaba
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Logo + título */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div className="relative h-14 w-40">
+            <Image
+              src="/uploads/logoct.png"
+              alt="CT Capixaba"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <div className="space-y-1">
-            <CardTitle>Bem-vindo</CardTitle>
-            <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
+          <h1 className="text-2xl font-bold text-white">
+            Acessar CT Capixaba
+          </h1>
+          <p className="text-sm text-slate-400">
+            Entre com seu e-mail e senha para acessar seus treinos.
+          </p>
+        </div>
+
+        {/* Card de login */}
+        <div className="rounded-2xl border border-white/10 bg-black/70 p-6 shadow-2xl backdrop-blur-md">
           <LoginForm />
-        </CardContent>
+        </div>
+
+        {/* Setup do primeiro coach */}
         {totalCoaches === 0 && (
-          <CardFooter className="flex-col">
-            <p className="text-sm text-zinc-400 text-center">
-              Nenhum coach cadastrado ainda.{' '}
-              <Link href="/setup" className="text-orange-600 hover:text-orange-500 transition-colors">
-                Configurar primeiro coach
-              </Link>
-              .
-            </p>
-          </CardFooter>
+          <p className="text-center text-xs text-slate-400">
+            Nenhum coach cadastrado ainda.{" "}
+            <Link
+              href="/setup"
+              className="text-orange-400 hover:text-orange-300 underline underline-offset-2"
+            >
+              Configurar primeiro coach
+            </Link>
+            .
+          </p>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
