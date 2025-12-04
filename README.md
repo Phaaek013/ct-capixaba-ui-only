@@ -6,7 +6,7 @@ Aplicação web para gestão de treinos e alunos de um centro de treinamento/aca
 
 O objetivo do sistema é tirar o controle de treinos, alunos e planos do improviso (papel, planilhas, WhatsApp) e trazer tudo para uma plataforma única, organizada por perfis de acesso (coach, aluno, administrador).
 
-Repositório: https://github.com/Phaaek013/ct-capixaba
+Repositório: https://github.com/Phaaek013/ct-capixaba-ui-only
 
 ---
 
