@@ -1,27 +1,30 @@
 // src/app/page.tsx
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/auth";
+import { auth } from "@/auth";
 import { TipoUsuario } from "@/types/tipo-usuario";
 
-// garante que essa página NUNCA seja renderizada estaticamente
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  // NADA de chamar getServerSession fora desta função
-  const session = await getServerSession(authOptions);
+  // Usa o helper oficial do NextAuth v5 para App Router
+  const session = await auth();
 
-  if (!session) {
+  // Se não estiver logado, manda pro login
+  if (!session?.user) {
     redirect("/login");
   }
 
-  // dependendo de como o session.user.tipo vem, tratamos os dois jeitos
-  const tipo = (session.user as any)?.tipo as TipoUsuario | string | undefined;
+  // A gente já sabe que tem usuário aqui
+  const tipo = (session.user as any).tipo as TipoUsuario | undefined;
 
-  if (tipo === TipoUsuario.Coach || tipo === "Coach") {
+  if (tipo === TipoUsuario.Coach || tipo === TipoUsuario.Admin) {
     redirect("/coach");
   }
 
-  // default: aluno
-  redirect("/aluno");
+  if (tipo === TipoUsuario.Aluno) {
+    redirect("/aluno");
+  }
+
+  // Fallback paranoico: se por algum motivo não tiver tipo, joga pro login
+  redirect("/login");
 }
