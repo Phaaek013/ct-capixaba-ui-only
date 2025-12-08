@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { Input, PasswordInput, Checkbox, Button } from "@/components/ui";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -14,7 +15,6 @@ export default function LoginForm() {
   useEffect(() => {
     const err = searchParams.get("error");
     if (err) {
-      // Map common NextAuth error codes to user-friendly messages
       const map: Record<string, string> = {
         CredentialsSignin: "Credenciais inválidas",
         AccessDenied: "Acesso negado",
@@ -49,25 +49,47 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md space-y-4">
-      <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" required autoComplete="email" />
-      </div>
-      <div>
-        <label htmlFor="senha">Senha</label>
-        <input id="senha" name="senha" type="password" required autoComplete="current-password" />
-      </div>
-      <div className="flex items-center space-x-2">
-        <input id="manter" name="manter" type="checkbox" defaultChecked className="w-4 h-4" />
-        <label htmlFor="manter" className="!mb-0 text-sm text-slate-700">
-          Manter conectado por 30 dias
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="email" className="text-sm font-medium text-zinc-200">
+          Email
         </label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="seu@email.com"
+        />
       </div>
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
-      <button type="submit" disabled={carregando}>
+
+      <div className="space-y-2">
+        <label htmlFor="senha" className="text-sm font-medium text-zinc-200">
+          Senha
+        </label>
+        <PasswordInput
+          id="senha"
+          name="senha"
+          required
+          autoComplete="current-password"
+          placeholder="Digite sua senha"
+        />
+      </div>
+
+      <label
+        htmlFor="manter"
+        className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer"
+      >
+        <Checkbox id="manter" name="manter" defaultChecked />
+        <span>Manter conectado por 30 dias</span>
+      </label>
+
+      {erro && <p className="text-sm text-red-400">{erro}</p>}
+
+      <Button type="submit" disabled={carregando} className="w-full">
         {carregando ? "Entrando..." : "Entrar"}
-      </button>
+      </Button>
     </form>
   );
 }

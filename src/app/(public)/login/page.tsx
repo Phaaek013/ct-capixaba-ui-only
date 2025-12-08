@@ -1,34 +1,35 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+// app/(public)/login/page.tsx
+import type { Metadata } from "next";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import LoginForm from "./login-form";
-import { TipoUsuario } from "@/types/tipo-usuario";
 
-export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
-  if (session) {
-    if (session.user.senhaPrecisaTroca) {
-      redirect("/primeiro-acesso/alterar-senha");
-    }
-    if (session.user.tipo === TipoUsuario.Coach) {
-      redirect("/coach");
-    }
-    redirect("/aluno");
-  }
+export const metadata: Metadata = {
+  title: "Login | CT Capixaba",
+  description: "Acesse seus treinos do CT Capixaba.",
+};
 
-  const totalCoaches = await prisma.usuario.count({ where: { tipo: TipoUsuario.Coach } });
-
+export default function LoginPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Entrar</h1>
-      <LoginForm />
-      {totalCoaches === 0 && (
-        <p className="text-sm text-slate-600">
-          Nenhum coach cadastrado ainda. <Link href="/setup">Configurar primeiro coach</Link>.
-        </p>
-      )}
-    </div>
+    <Card className="w-full rounded-2xl border border-border bg-card/90 p-8 shadow-xl space-y-6">
+      {/* Cabeçalho do card */}
+      <CardHeader className="space-y-2 text-center p-0">
+        {/* Logo centralizado acima do texto */}
+        <div className="flex justify-center mb-4">
+          <img src="/uploads/logoct.png" alt="Logo CT Capixaba" className="h-40 w-auto" />
+        </div>
+        <CardTitle className="text-2xl font-bold tracking-tight">
+          Acesso ao CT Capixaba
+        </CardTitle>
+        <CardDescription className="text-sm">
+          Entre com seu e-mail e senha para acessar seus treinos.
+        </CardDescription>
+      </CardHeader>
+
+      {/* Formulário */}
+      <CardContent className="p-0">
+        <LoginForm />
+      </CardContent>
+    </Card>
   );
 }
+

@@ -6,6 +6,7 @@ import { compararSenha, hashSenha } from "@/utils/crypto";
 import { registrarLog } from "@/lib/log";
 import { revalidatePath } from "next/cache";
 import { TipoUsuario } from "@/types/tipo-usuario";
+import { Card, PageHeader, PasswordInput, Button } from "@/components/ui";
 
 async function alterarSenha(formData: FormData) {
   "use server";
@@ -61,30 +62,20 @@ export default async function AlterarSenhaPrimeiroAcesso({ searchParams }: PageP
   const mensagemErro = typeof searchParams?.error === "string" ? searchParams?.error : null;
 
   return (
-    <div className="max-w-md space-y-6">
-      <h1 className="text-2xl font-bold">Alterar senha</h1>
-      <p className="text-sm text-slate-600">
-        Defina uma nova senha para continuar usando o sistema.
-      </p>
-      {mensagemErro === "invalid" && (
-        <p className="text-sm text-red-600">As senhas precisam corresponder e ter pelo menos 8 caracteres.</p>
-      )}
-      {mensagemErro === "senha" && <p className="text-sm text-red-600">Senha atual incorreta.</p>}
-      <form action={alterarSenha} className="space-y-4">
-        <div>
-          <label htmlFor="senhaAtual">Senha atual</label>
-          <input id="senhaAtual" name="senhaAtual" type="password" required />
-        </div>
-        <div>
-          <label htmlFor="novaSenha">Nova senha</label>
-          <input id="novaSenha" name="novaSenha" type="password" minLength={8} required />
-        </div>
-        <div>
-          <label htmlFor="confirmar">Confirmar nova senha</label>
-          <input id="confirmar" name="confirmar" type="password" minLength={8} required />
-        </div>
-        <button type="submit">Salvar nova senha</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md space-y-6">
+        <PageHeader title="Alterar senha" description="Defina uma nova senha para continuar usando o sistema." />
+        {mensagemErro === "invalid" && (
+          <p className="text-sm text-red-600">As senhas precisam corresponder e ter pelo menos 8 caracteres.</p>
+        )}
+        {mensagemErro === "senha" && <p className="text-sm text-red-600">Senha atual incorreta.</p>}
+        <form action={alterarSenha} className="space-y-4">
+          <PasswordInput label="Senha atual" id="senhaAtual" name="senhaAtual" required />
+          <PasswordInput label="Nova senha" id="novaSenha" name="novaSenha" minLength={8} required />
+          <PasswordInput label="Confirmar nova senha" id="confirmar" name="confirmar" minLength={8} required />
+          <Button type="submit">Salvar nova senha</Button>
+        </form>
+      </Card>
     </div>
   );
 }

@@ -1,63 +1,22 @@
-import Link from 'next/link';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
-import dynamic from 'next/dynamic';
-import { TipoUsuario } from '@/types/tipo-usuario';
+import Image from "next/image";
+import Link from "next/link";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
-const LogoutButton = dynamic(() => import('./LogoutButton'), { ssr: false });
-
-const coachLinks = [
-  { href: '/coach', label: 'Dashboard' },
-  { href: '/coach/alunos', label: 'Alunos' },
-  { href: '/coach/treinos', label: 'Treinos' },
-  { href: '/coach/feedback', label: 'Feedbacks' },
-  { href: '/coach/modelos', label: 'Modelos' },
-  { href: '/coach/pdfs', label: 'PDFs' },
-  { href: '/coach/config', label: 'Config' }
-];
-
-const alunoLinks = [{ href: '/aluno', label: 'Área do aluno' }];
-
-export async function HeaderBrand() {
-  try {
-    const session = await getServerSession(authOptions);
-    let links: { href: string; label: string }[] = [];
-
-    if (session?.user?.tipo === TipoUsuario.Coach) {
-      links = coachLinks;
-    } else if (session?.user?.tipo === TipoUsuario.Aluno) {
-      links = alunoLinks;
-    }
-
-    return (
-      <header className="brand-header">
-        <Link href="/" className="brand-logo">
-          CT Capixaba
+function HeaderBrand() {
+  return (
+    <header className="border-b border-border bg-background/80">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
+        <Link href="/aluno" className="flex items-center gap-4">
+          <Image src="/uploads/logoct.png" alt="CT Capixaba" width={72} height={72} className="h-[72px] w-[72px]" />
+          <span className="sr-only">CT Capixaba</span>
         </Link>
-        {links.length > 0 && (
-          <nav className="brand-nav" aria-label="Navegação principal">
-            {links.map((link) => (
-              <Link key={link.href} href={link.href}>
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        )}
-        {session && (
-          <div className="brand-actions">
-            <LogoutButton className="px-3 py-2 rounded-md text-sm" />
-          </div>
-        )}
-      </header>
-    );
-  } catch (error) {
-    console.error('Erro ao renderizar cabeçalho:', error);
-    return (
-      <header className="brand-header">
-        <Link href="/" className="brand-logo">
-          CT Capixaba
-        </Link>
-      </header>
-    );
-  }
+
+        <div className="flex items-center gap-3">
+          <LogoutButton />
+        </div>
+      </div>
+    </header>
+  );
 }
+
+export default HeaderBrand;
