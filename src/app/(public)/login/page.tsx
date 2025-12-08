@@ -1,4 +1,5 @@
 // app/(public)/login/page.tsx
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import LoginForm from "./login-form";
@@ -15,7 +16,14 @@ export default function LoginPage() {
       <CardHeader className="space-y-2 text-center p-0">
         {/* Logo centralizado acima do texto */}
         <div className="flex justify-center mb-4">
-          <img src="/uploads/logoct.png" alt="Logo CT Capixaba" className="h-40 w-auto" />
+          <Image
+            src="/uploads/logoct.png"
+            alt="Logo CT Capixaba"
+            width={140}
+            height={140}
+            className="h-24 w-auto"
+            priority
+          />
         </div>
         <CardTitle className="text-2xl font-bold tracking-tight">
           Acesso ao CT Capixaba

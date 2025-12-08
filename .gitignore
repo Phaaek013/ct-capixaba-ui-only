@@ -15,3 +15,4 @@ yarn-error.log*
 # Uploads (dev only)
 public/uploads/*
 !public/uploads/.gitkeep
+!public/uploads/logoct.png
