@@ -1,18 +1,55 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { Card } from "@/components/ui/card";
+import PerfilAlunoClient from "./PerfilAlunoClient";
 
-export default function PerfilPage() {
+export default async function PerfilAlunoPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?.email) {
+    redirect("/login");
+  }
+
+  const usuario = await prisma.usuario.findUnique({
+    where: { email: session.user.email },
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      avatarUrl: true,
+      diaVencimentoMensalidade: true,
+      proximoVencimentoEm: true
+    }
+  });
+
+  if (!usuario) {
+    redirect("/login");
+  }
+
+  const user = {
+    name: usuario.nome,
+    email: usuario.email,
+    avatarUrl: usuario.avatarUrl ?? null
+  };
+
+  const mensalidadeInfo = {
+    diaVencimentoMensalidade: usuario.diaVencimentoMensalidade ?? null,
+    proximoVencimentoEm: usuario.proximoVencimentoEm?.toISOString() ?? null
+  };
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Meu perfil</h1>
+    <div className="space-y-6">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-wide text-orange-400">Perfil</p>
+        <h1 className="text-2xl font-bold text-foreground">Meus dados</h1>
+        <p className="text-sm text-muted-foreground">Informações básicas da sua conta no CT Capixaba.</p>
+      </header>
 
-      <Card className="bg-card/80">
-        <CardHeader>
-          <CardTitle>Dados do aluno</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>Nome, e-mail, telefone, data de nascimento…</p>
-          <p>Aqui o coach/aluno poderão editar informações básicas de cadastro.</p>
-        </CardContent>
+      {/* Card de perfil com layout base; conteúdo dinâmico fica no client */}
+      <Card className="bg-black/40 px-4 py-6">
+        <PerfilAlunoClient user={user} mensalidade={mensalidadeInfo} />
       </Card>
     </div>
   );

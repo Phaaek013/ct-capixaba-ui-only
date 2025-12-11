@@ -1,19 +1,26 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
-export default function PdfsPage() {
+import { authOptions } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { TipoUsuario } from "@/types/tipo-usuario";
+
+import { AlunoPdfsClient } from "./AlunoPdfsClient";
+
+export default async function AlunoPdfsPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user?.tipo !== TipoUsuario.Aluno) {
+    redirect("/login");
+  }
+
+  const pdfs = await prisma.pdfDocumento.findMany({
+    orderBy: { criadoEm: "desc" }
+  });
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Meus PDFs</h1>
-
-      <Card className="bg-card/80">
-        <CardHeader>
-          <CardTitle>Documentos enviados pelo coach</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>Lista de PDFs com nome, data de envio e botão para visualizar / baixar.</p>
-          <p>Por enquanto, você pode deixar uma lista fictícia.</p>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-[#050608] pt-6 text-white">
+      <AlunoPdfsClient pdfs={pdfs} />
     </div>
   );
 }

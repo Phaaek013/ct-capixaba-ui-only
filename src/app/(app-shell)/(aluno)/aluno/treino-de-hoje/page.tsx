@@ -1,19 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { authOptions } from "@/auth";
+import { TipoUsuario } from "@/types/tipo-usuario";
+import { PageHeader } from "@/components/ui/page-header";
+import TreinoHojeAlunoClient from "./TreinoHojeAlunoClient";
 
-export default function TreinoDeHojePage() {
+export default async function TreinoDeHojePage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.tipo !== TipoUsuario.Aluno) {
+    redirect("/login");
+  }
+
+  const hoje = new Date();
+  const dataHojeISO = format(hoje, "yyyy-MM-dd");
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Treino de hoje</h1>
+    <div className="w-full max-w-3xl mx-auto px-4 pb-28 space-y-4">
+      <PageHeader
+        title="Treino de hoje"
+        description={format(hoje, "EEEE, d 'de' MMMM", { locale: ptBR })}
+      />
 
-      <Card className="bg-card/80">
-        <CardHeader>
-          <CardTitle>Treino A - Peito e Tríceps</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>Série de exercícios focada no desenvolvimento de peitoral e tríceps.</p>
-          <p>Tempo estimado: 45–60 minutos.</p>
-        </CardContent>
-      </Card>
+      <TreinoHojeAlunoClient dataHoje={dataHojeISO} />
     </div>
   );
 }

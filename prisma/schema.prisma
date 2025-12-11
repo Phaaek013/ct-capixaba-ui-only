@@ -8,26 +8,37 @@ datasource db {
 }
 
 model Usuario {
-  id                Int             @id @default(autoincrement())
-  nome              String
-  email             String          @unique
-  senhaHash         String
-  tipo              String          @default("Coach")
-  senhaPrecisaTroca Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  treinos           Treino[]        @relation("UsuarioTreinos")
-  feedbacks         Feedback[]
-  documentos        DocumentoPDF[]
-  logs              LogAcao[]
+  id                       Int             @id @default(autoincrement())
+  nome                     String
+  email                    String          @unique
+  avatarUrl                String?
+  senhaHash                String
+  tipo                     String          @default("Coach")
+  senhaPrecisaTroca        Boolean         @default(true)
+  ativo                    Boolean         @default(true)
+  motivoBloqueio           String          @default("NENHUM") // NENHUM | FINANCEIRO | MANUAL
+  diaVencimentoMensalidade Int?
+  proximoVencimentoEm      DateTime?
+  ultimoPagamentoEm        DateTime?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  treinos                  Treino[]        @relation("UsuarioTreinos")
+  treinosCriados           Treino[]        @relation("CoachTreinos")
+  feedbacks                Feedback[]
+  documentos               DocumentoPDF[]
+  logs                     LogAcao[]
+  treinosConcluidos        TreinoConclusao[]
+  mensagensChat            TreinoMensagem[]    @relation("UsuarioTreinoMensagem")
 }
 
 model Treino {
   id         Int        @id @default(autoincrement())
   aluno      Usuario?   @relation("UsuarioTreinos", fields: [alunoId], references: [id], onDelete: Cascade)
   alunoId    Int?
+  coach      Usuario?   @relation("CoachTreinos", fields: [coachId], references: [id], onDelete: SetNull)
+  coachId    Int?
   dataTreino DateTime?
-  conteudo   String
+  conteudo   String?
   videoUrl   String?
   ehModelo   Boolean    @default(false)
   nomeModelo String?
@@ -36,6 +47,8 @@ model Treino {
   feedbacks  Feedback[]
 
   @@unique([alunoId, dataTreino])
+  @@index([coachId])
+  @@index([ehModelo])
 }
 
 model Feedback {
@@ -60,6 +73,16 @@ model DocumentoPDF {
   alunos    Usuario[]
 }
 
+model PdfDocumento {
+  id           Int          @id @default(autoincrement())
+  titulo       String
+  descricao    String?
+  categoria    String       @default("OUTRO")
+  arquivoPath  String
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+}
+
 model Config {
   id           Int      @id @default(1)
   limiteAlunos Int      @default(100)
@@ -74,4 +97,46 @@ model LogAcao {
   tipoAcao  String
   detalhes  String?
   dataHora  DateTime  @default(now())
+}
+
+model Pdf {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  slug        String   @unique
+  descricao   String?
+  arquivoPath String
+  criadoEm    DateTime @default(now())
+  ativo       Boolean  @default(true)
+}
+
+model TreinoConclusao {
+  id            Int             @id @default(autoincrement())
+  usuarioId     Int
+  treinoId      String
+  dataConclusao DateTime        @default(now())
+  feedbackText  String?
+
+  usuario   Usuario          @relation(fields: [usuarioId], references: [id])
+  mensagens TreinoMensagem[]
+
+  @@index([usuarioId])
+  @@index([treinoId])
+  @@unique([usuarioId, treinoId])
+}
+
+model TreinoMensagem {
+  id                Int             @id @default(autoincrement())
+  treinoConclusaoId Int
+  autorId           Int
+  texto             String
+  criadoEm          DateTime        @default(now())
+  lidoPeloAlunoEm   DateTime?
+  lidoPeloCoachEm   DateTime?
+
+  treinoConclusao TreinoConclusao @relation(fields: [treinoConclusaoId], references: [id], onDelete: Cascade)
+  autor           Usuario         @relation("UsuarioTreinoMensagem", fields: [autorId], references: [id])
+
+  @@index([treinoConclusaoId, criadoEm])
+  @@index([treinoConclusaoId, lidoPeloAlunoEm])
+  @@index([treinoConclusaoId, lidoPeloCoachEm])
 }

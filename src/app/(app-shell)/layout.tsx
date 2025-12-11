@@ -1,22 +1,24 @@
 import type { ReactNode } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth-options";
 import HeaderBrand from "@/components/HeaderBrand";
+import { AppFooter } from "@/components/layout/AppFooter";
 import "../../styles/brand.css";
 import "../../styles/dark-theme.css";
 
-export default function AppShellLayout({ children }: { children: ReactNode }) {
-  const year = new Date().getFullYear();
+export default async function AppShellLayout({ children }: { children: ReactNode }) {
+  const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <HeaderBrand />
+    <div className="flex min-h-screen w-full flex-col bg-[#050505] text-zinc-50">
+      {/* Header só aparece se tiver sessão */}
+      {session?.user && <HeaderBrand />}
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <main className="w-full flex-1">
         {children}
       </main>
 
-      <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        © {year} CT Capixaba · Desenvolvido por <span className="font-semibold">Vortix.IA</span>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

@@ -55,15 +55,24 @@ export async function uploadPdf(formData: FormData) {
   await fs.mkdir(uploadDir, { recursive: true });
   const filePath = path.join(uploadDir, safeName);
   await fs.writeFile(filePath, buffer);
+  const publicPath = `/uploads/${safeName}`;
 
   const documento = await prisma.documentoPDF.create({
     data: {
       titulo,
-      filePath: `/uploads/${safeName}`,
+      filePath: publicPath,
       dataEnvio: new Date(),
       alunos: {
         connect: alunosSelecionados.map((id) => ({ id }))
       }
+    }
+  });
+
+  await prisma.pdfDocumento.create({
+    data: {
+      titulo,
+      categoria: "OUTRO",
+      arquivoPath: publicPath
     }
   });
 
@@ -87,6 +96,7 @@ export async function removePdf(formData: FormData) {
   if (documento) {
     const absolutePath = path.join(process.cwd(), "public", documento.filePath.replace(/^\/+/, ""));
     await fs.unlink(absolutePath).catch(() => undefined);
+    await prisma.pdfDocumento.deleteMany({ where: { arquivoPath: documento.filePath } });
   }
 
   await prisma.documentoPDF.delete({ where: { id } });

@@ -89,13 +89,19 @@ a:hover {
   color: #fb923c;
 }
 
-button {
+/* Botão primário laranja - aplicar apenas quando necessário com classe */
+button.btn-brand-primary {
   background-color: #f97316;
   color: #0f172a;
 }
 
-button:hover {
+button.btn-brand-primary:hover {
   background-color: #fb923c;
+}
+
+/* Botões de ícone/toggle devem ser neutros por padrão */
+button[type="button"]:not(.btn-brand-primary):not([class*="bg-"]) {
+  background-color: transparent;
 }
 
 input,

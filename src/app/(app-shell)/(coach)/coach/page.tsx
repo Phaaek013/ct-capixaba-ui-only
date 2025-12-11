@@ -1,24 +1,32 @@
-import Link from "next/link";
-import { assertCoach } from "@/lib/roles";
-import "./page.css";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
-export default async function CoachDashboard() {
-  const session = await assertCoach();
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth-options";
+import { prisma } from "@/lib/prisma";
+import CoachHomeClient from "./CoachHomeClient";
+
+export default async function CoachHomePage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    redirect("/login");
+  }
+
+  const coach = await prisma.usuario.findUnique({
+    where: { email: session.user.email },
+    select: {
+      nome: true,
+      email: true,
+      avatarUrl: true,
+    },
+  });
+
+  const nome = coach?.nome ?? session.user.name ?? "Treinador";
+  const email = coach?.email ?? session.user.email;
+  const avatarUrl = coach?.avatarUrl ?? null;
 
   return (
-    <div className="space-y-6">
-      <div className="card p-4 space-y-2">
-        <h1 className="text-2xl font-bold">Olá, {session.user?.name}</h1>
-        <p className="text-sm muted">{session.user?.email}</p>
-      </div>
-      <nav className="grid gap-2 coach-nav">
-        <Link href="/coach/alunos" className="card p-4 hover:border-primary transition-colors">Gerenciar alunos</Link>
-        <Link href="/coach/treinos" className="card p-4 hover:border-primary transition-colors">Treinos</Link>
-        <Link href="/coach/feedback" className="card p-4 hover:border-primary transition-colors">Feedbacks</Link>
-        <Link href="/coach/modelos" className="card p-4 hover:border-primary transition-colors">Modelos de treino</Link>
-        <Link href="/coach/pdfs" className="card p-4 hover:border-primary transition-colors">PDFs</Link>
-        <Link href="/coach/config" className="card p-4 hover:border-primary transition-colors">Configurações</Link>
-      </nav>
+    <div className="py-8">
+      <CoachHomeClient nome={nome} email={email} avatarUrl={avatarUrl} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Input, PasswordInput, Checkbox, Button } from "@/components/ui";
 
 export default function LoginForm() {
@@ -90,6 +91,19 @@ export default function LoginForm() {
       <Button type="submit" disabled={carregando} className="w-full">
         {carregando ? "Entrando..." : "Entrar"}
       </Button>
+
+      {/* Aviso de termos */}
+      <p className="text-center text-xs text-zinc-500">
+        Ao acessar o CT Capixaba você concorda com os{" "}
+        <Link href="/termos" className="text-orange-400 underline underline-offset-2 hover:text-orange-300">
+          Termos de uso
+        </Link>{" "}
+        e a{" "}
+        <Link href="/privacidade" className="text-orange-400 underline underline-offset-2 hover:text-orange-300">
+          Política de privacidade
+        </Link>
+        .
+      </p>
     </form>
   );
 }
